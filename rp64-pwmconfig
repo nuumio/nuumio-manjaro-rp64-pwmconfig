@@ -1,0 +1,58 @@
+#!/bin/bash
+
+CONFIG=/etc/rp64-pwmconfig.conf
+PWMROOT=/sys/class/pwm
+
+function setpwmconfig {
+  local chip=${1}
+  local chipdir="${PWMROOT}/pwmchip${chip}"
+  local ch=${2}
+  local chdir="${chipdir}/pwm${ch}"
+  local period=${3}
+  local duty=${4}
+  local enabled=${5}
+  # BASH arithetic comparisons
+  if (( ${duty} > 100 )); then
+    duty=100
+  fi
+  if (( ${enabled} > 1 )); then
+    enabled=1
+  fi
+  
+  if [ ! -d "${chipdir}" ]; then
+    echo "rp64-pwmconfig: No such pwmchip: ${chipdir}"
+    return
+  fi
+  
+  local npwm=$(cat "${chipdir}/npwm")
+  if (( ${ch} >= ${npwm} )); then
+    echo "rp64-pwmconfig: No such pwm channel for pwmchip${chip}: ${ch}"
+    return
+  fi
+
+  if [ ! -d "${chdir}" ]; then
+    echo ${ch} > "${chipdir}/export"
+  fi
+  if [ ! -d "${chdir}" ]; then
+    echo "rp64-pwmconfig: Cannot open pwm channel for pwmchip${chip}: ${ch}"
+    return
+  fi
+  
+  echo ${period} > "${chdir}/period"
+  period=$(cat "${chdir}/period")
+  echo $(( ${period} * ${duty} / 100 )) > "${chdir}/duty_cycle"
+  echo ${enabled} > "${chdir}/enable"
+}
+
+function readpwmconfigs {
+  egrep "^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]\s*" "${CONFIG}" | while read -r line; do
+    setpwmconfig ${line}
+  done
+}
+
+readpwmconfigs
+
+# Keep on watching changes in CONFIG
+inotifywait -q -m -e close_write "${CONFIG}" | while read -r line; do
+  readpwmconfigs
+done

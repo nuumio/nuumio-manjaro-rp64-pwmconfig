@@ -1,0 +1,9 @@
+[Unit]
+Description=RockPro64 PWM config service
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/rp64-pwmconfig
+
+[Install]
+WantedBy=basic.target

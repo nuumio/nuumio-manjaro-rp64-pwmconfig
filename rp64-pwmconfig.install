@@ -1,0 +1,15 @@
+# arg 1:  the new package version
+post_install() {
+  systemctl enable --now rp64-pwmconfig.service
+}
+
+# arg 1:  the new package version
+# arg 2:  the old package version
+post_upgrade() {
+  systemctl restart rp64-pwmconfig.service
+}
+
+# arg 1:  the old package version
+pre_remove() {
+  systemctl disable --now rp64-pwmconfig.service
+}
