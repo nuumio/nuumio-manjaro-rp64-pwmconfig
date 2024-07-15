@@ -18,12 +18,12 @@ function setpwmconfig {
   if (( ${enabled} > 1 )); then
     enabled=1
   fi
-  
+
   if [ ! -d "${chipdir}" ]; then
     echo "rp64-pwmconfig: No such pwmchip: ${chipdir}"
     return
   fi
-  
+
   local npwm=$(cat "${chipdir}/npwm")
   if (( ${ch} >= ${npwm} )); then
     echo "rp64-pwmconfig: No such pwm channel for pwmchip${chip}: ${ch}"
@@ -37,7 +37,7 @@ function setpwmconfig {
     echo "rp64-pwmconfig: Cannot open pwm channel for pwmchip${chip}: ${ch}"
     return
   fi
-  
+
   echo ${period} > "${chdir}/period"
   period=$(cat "${chdir}/period")
   echo $(( ${period} * ${duty} / 100 )) > "${chdir}/duty_cycle"
@@ -45,7 +45,7 @@ function setpwmconfig {
 }
 
 function readpwmconfigs {
-  egrep "^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]\s*" "${CONFIG}" | while read -r line; do
+  grep -E "^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]\s*" "${CONFIG}" | while read -r line; do
     setpwmconfig ${line}
   done
 }
